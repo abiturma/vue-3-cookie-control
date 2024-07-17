@@ -85,7 +85,7 @@
 <script setup>
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { XMarkIcon } from '@heroicons/vue/24/outline'
-import useCookieControl from '../composables/useCookieControl.js'
+import { useCookieControl } from 'abiturma-vue-3-cookie-control'
 import CookieControlSwitch from './CookieControlSwitch.vue'
 
 const { newForm, cookies, acceptAll, save, rejectAll } = useCookieControl()
