@@ -3,7 +3,7 @@
                 enter-active-class="transition ease-in duration-150 delay-1000" enter-from-class="opacity-0" enter-to-class="opacity-100"
     >
         <aside
-            class="fixed bottom-0 h-24 z-20 w-full bg-[#c3b49e] flex justify-between items-center px-8 text-sm text-white"
+            class="fixed bottom-0 h-20 z-20 w-full bg-[#c3b49e] flex justify-between items-center px-8 text-sm text-white"
             v-if="show && showBanner">
             <div>
                 Wir verwenden ein Minimum an Cookies, um die korrekte Funktionsweise unserer Webseite sicherzustellen.
