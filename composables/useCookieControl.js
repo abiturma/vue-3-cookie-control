@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue'
+import { computed, ref, reactive } from 'vue'
 import { useLocalStorage } from "@vueuse/core";
 
 const storage = useLocalStorage('consent_control', {
