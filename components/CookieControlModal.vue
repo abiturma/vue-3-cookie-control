@@ -93,6 +93,7 @@ import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } fro
 import { XMarkIcon } from '@heroicons/vue/24/outline'
 import useCookieControl from '../composables/useCookieControl'
 import CookieControlSwitch from './CookieControlSwitch.vue'
+import { watch } from "vue"
 
 const {form, acceptAll, submitForm, rejectAll} = useCookieControl()
 
