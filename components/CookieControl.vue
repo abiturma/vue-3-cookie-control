@@ -23,7 +23,7 @@
 
 <script setup>
 import CookieControlModal from './CookieControlModal.vue'
-import { useCookieControl } from 'abiturma-vue-3-cookie-control'
+import useCookieControl from '../composables/useCookieControl'
 import { onMounted, ref } from 'vue'
 
 

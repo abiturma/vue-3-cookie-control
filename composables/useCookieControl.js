@@ -1,132 +1,117 @@
-import { computed, ref, watch } from 'vue'
-import { useCookies } from '@vueuse/integrations/useCookies'
-import { createEventHook } from '@vueuse/core'
-import createCookies from '../src/createCookies'
-import { init } from '../src/helpers.js'
+import { computed, ref } from 'vue'
+import { useLocalStorage } from "@vueuse/core";
 
-const cookieSettings = ref({
-    necessary: [],
-    optional: []
+const storage = useLocalStorage('consent_control', {
+    saved: false, 
+    consent: {
+            ad_storage: false,
+            analytics_storage: false,
+            personalization_storage: false,
+            ad_user_data : false,
+            ad_personalization: false,
+    },
+    updated_at: new Date()
 })
+
+//todo: if updated at is old - reset consent
 
 const open = ref(false)
-const BrowserCookies = useCookies(['cookie_control_enabled', 'cookie_control_saved'])
-
-const form = ref({})
-
-const isSaved = computed(() => BrowserCookies.get('cookie_control_saved') === true)
-
-const acceptance = createEventHook()
-
-
-const cookies = computed(() => {
-    const result = {}
-    result.necessary = cookieSettings.value.necessary.map(cookie => Object.assign({}, cookie, { consent: true }))
-    result.optional = cookieSettings.value.optional.map(cookie => Object.assign({}, cookie, { consent: hasConsent(cookie) }))
-    return result
+const form = reactive({
+    settings: {},
+    descriptions: {
+        ad_storage: 'Ermöglicht das Speichern von werbebezogenen Daten wie Cookies',
+        analytics_storage: 'Ermöglicht das Speichern von analysebezogenen Daten wie Cookies, z. B. zur Besuchsdauer',
+        personalization_storage: 'Ermöglicht das Speichern von Daten mit Bezug zur Personalisierung, z. B. Videoempfehlungen',
+        ad_user_data: 'Legt die Einwilligung zum Senden von werbebezogenen Nutzerdaten an Google fest',
+        ad_personalization: 'Legt die Einwilligung für personalisierte Anzeigen fest',
+    },
+    names: {
+        ad_storage: 'Ad Storage',
+        analytics_storage: 'Google Analytics',
+        personalization_storage: 'Personalization Storage',
+        ad_user_data: 'Ad User Data',
+        ad_personalization: 'Ad Personalization',
+    },
+    reset() {
+        for(const key in storage.value.consent) {
+            this.settings[key] = isSaved.value ? storage.value.consent[key] : true
+        }
+    }
 })
+const isSaved = computed(() => storage.value.saved === true)
+const showBanner = computed(() => isSaved.value === false)
+window.dataLayer = window.dataLayer || [];
+const dataLayer = window.dataLayer
 
-const initialize = (data) => {
-    init(data)
-    cookieSettings.value = createCookies(data)
-}
-const showBanner = computed(() => isSaved.value === false && cookies.value.optional.length > 0)
-
-const cookiesEnabledIds = computed(() => cookies.value.optional.filter(cookie => cookie.consent).map(cookie => cookie.id))
-
-watch(cookiesEnabledIds, (current, previous) => {
-    for (const key of current) {
-        if (current.includes(key) && !(previous ?? []).includes(key)) {
-            const cookie = findCookie(key)
-            if(typeof cookie?.accepted === 'function') {
-                cookie.accepted()
-            }
-            acceptance.trigger(cookie)
-        }
-    }
-
-}, { immediate: true, deep: true })
-
-const findCookie = (id) => {
-    for (const cookie of cookieSettings.value.optional) {
-        if (cookie.id === id) {
-            return cookie
-        }
-    }
-    return null
+const sendUpdate = () => {
+    const consent = toRaw(storage.value.consent)
+    dataLayer.push({
+        event: 'consent_updated',
+        consent
+    });
 }
 
-const hasConsent = (cookie) => {
-    const consented = BrowserCookies.get('cookie_control_enabled') ?? []
-    return consented.includes(cookie.id)
-}
 
+if(isSaved.value) {
+    sendUpdate()    
+}
 
 export default function useCookieControl() {
 
 
-    const newForm = () => {
-        form.value = {}
-        for (const cookie of cookies.value.optional) {
-            form.value[cookie.id] = !!cookie.consent
-        }
-        return form
+    const submitForm = () => {
+        storage.value.consent = form.settings
+        sendUpdate()
+        save()
+        setTimeout(closeSettings, 50)
     }
 
 
     const save = () => {
-        const result = []
-        for (const key of Object.keys(form.value)) {
-            if (form.value[key]) {
-                result.push(key)
-            }
-        }
-        BrowserCookies.set('cookie_control_enabled', result)
-        closeSettings()
+        storage.value.updated_at = new Date()
+        storage.value.saved = true
     }
 
     const rejectAll = () => {
-        for (const key of Object.keys(form.value)) {
-            form.value[key] = false
+        for(const key in storage.value.consent) {
+            storage.value.consent[key] = false
         }
-        BrowserCookies.set('cookie_control_enabled', [])
+        form.reset()
+        sendUpdate()
+        save()
         setTimeout(closeSettings, 50)
     }
 
     const acceptAll = () => {
-        for (const key of Object.keys(form.value)) {
-            form.value[key] = true
+        for(const key in storage.value.consent) {
+            storage.value.consent[key] = true
         }
-        BrowserCookies.set('cookie_control_enabled', cookies.value.optional.map(cookie => cookie.id))
+        form.reset()
+        sendUpdate()
+        save()
         setTimeout(closeSettings, 50)
     }
+    
 
     const openSettings = () => {
         open.value = true
     }
 
     const closeSettings = () => {
-        BrowserCookies.set('cookie_control_saved', true)
         open.value = false
     }
+    
+   
 
 
     return {
-        initialize,
         openSettings,
         open,
-        cookies,
-        save,
         rejectAll,
         acceptAll,
-        onAccepted: (callback) => {
-            for (const key of cookiesEnabledIds.value) {
-                callback(findCookie(key))
-            }
-            acceptance.on(callback)
-        },
         showBanner,
-        newForm,
+        form,
+        submitForm
     }
 
 

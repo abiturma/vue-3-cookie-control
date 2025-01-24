@@ -29,50 +29,56 @@
                                 </DialogTitle>
 
                                 <div class="space-y-8 my-10">
-
                                     <div>
                                         <h4 class="text-lg font-semibold leading-6 text-gray-800 mb-2">Notwendige
                                             Cookies</h4>
                                         <ul class="space-y-2">
-                                            <li v-for="cookie in cookies.necessary" :key="cookie.id">
-                                                <CookieControlSwitch disabled :model-value="true">
-                                                    <span class="font-medium text-gray-900">{{ cookie.name?.de }}</span>
-                                                    <span class="text-gray-500 ml-1">&ndash; {{ cookie.description?.de }}</span>
-                                                </CookieControlSwitch>
-                                            </li>
+                                            <CookieControlSwitch disabled :model-value="true">
+                                                <span class="font-medium text-gray-900">Functionality Storage</span>
+                                                <span class="text-gray-500 ml-1 text-xs">&ndash; Ermöglicht das Speichern von Daten, die die Funktion der Website oder App unterstützen, z. B. die Spracheinstellungen </span>
+                                            </CookieControlSwitch>
+                                            <CookieControlSwitch disabled :model-value="true">
+                                                <span class="font-medium text-gray-900">Security Storage</span>
+                                                <span class="text-gray-500 ml-1 text-xs">&ndash; Ermöglicht das Speichern von sicherheitsbezogenen Daten, z. B. für Authentifizierungsfunktionen, Betrugsprävention und andere Schutzmechanismen für Nutzer </span>
+                                            </CookieControlSwitch>
                                         </ul>
                                     </div>
 
                                     <div>
-                                        <h4 class="text-lg font-semibold leading-6 text-gray-800 mb-2">Optionale Cookies</h4>
+                                        <h4 class="text-lg font-semibold leading-6 text-gray-800 mb-2">Optionale
+                                            Cookies</h4>
                                         <ul class="space-y-2">
-                                            <li v-for="cookie in cookies.optional" :key="cookie.id">
-                                                <CookieControlSwitch v-model="form[cookie.id]">
-                                                    <span class="font-medium text-gray-900">{{ cookie.name?.de }}</span>
-                                                    <span class="text-gray-500 ml-1">&ndash; {{ cookie.description?.de }}</span>
+                                            <li v-for="(value,key) in form.settings">
+                                                <CookieControlSwitch v-model="form.settings[key]">
+                                                    <span class="font-medium text-gray-900">{{ form.names[key] }}</span>
+                                                    <span class="text-gray-500 ml-1 text-xs">&ndash; {{
+                                                            form.descriptions[key]
+                                                        }}</span>
                                                 </CookieControlSwitch>
                                             </li>
+                                            <!--                                            <li v-for="cookie in cookies.optional" :key="cookie.id">-->
+                                            <!--                                            </li>-->
                                         </ul>
                                     </div>
                                 </div>
-                                    <div class="flex space-x-6">
-                                        <button type="button"
-                                                class=" transition-colors rounded-md bg-amber-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-800"
-                                        @click="save"
-                                        >
-                                            Speichern
-                                        </button>
-                                        <button type="button"
-                                                class=" transition-colors rounded-md bg-amber-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-800"
-                                        @click="rejectAll">
-                                            Alle ablehnen
-                                        </button>
-                                        <button type="button"
-                                                class=" transition-colors rounded-md bg-amber-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-800"
-                                        @click="acceptAll">
-                                            Alle akzeptieren
-                                        </button>
-                                    </div>
+                                <div class="flex space-x-6">
+                                    <button type="button"
+                                            class=" transition-colors rounded-md bg-amber-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-800"
+                                            @click="submitForm"
+                                    >
+                                        Speichern
+                                    </button>
+                                    <button type="button"
+                                            class=" transition-colors rounded-md bg-amber-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-800"
+                                            @click="rejectAll">
+                                        Alle ablehnen
+                                    </button>
+                                    <button type="button"
+                                            class=" transition-colors rounded-md bg-amber-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-800"
+                                            @click="acceptAll">
+                                        Alle akzeptieren
+                                    </button>
+                                </div>
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -85,16 +91,21 @@
 <script setup>
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { XMarkIcon } from '@heroicons/vue/24/outline'
-import { useCookieControl } from 'abiturma-vue-3-cookie-control'
+import useCookieControl from '../composables/useCookieControl'
 import CookieControlSwitch from './CookieControlSwitch.vue'
 
-const { newForm, cookies, acceptAll, save, rejectAll } = useCookieControl()
+const {form, acceptAll, submitForm, rejectAll} = useCookieControl()
 
-const form = newForm()
 
 const open = defineModel({
     type: Boolean,
     default: false
+})
+
+watch(open, (value) => {
+    if (value) {
+        form.reset()
+    }
 })
 
 
